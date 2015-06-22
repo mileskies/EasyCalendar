@@ -1,7 +1,8 @@
 # EasyCalendar / React-Canvas-Reflux
 a simple calendar implement with reactjs-reflux and canvas
 
-### demo
+### Demo
+http://mileskies.github.io/EasyCalendar/app/
 
 ####Enter the project dir
 ```
