@@ -18,12 +18,14 @@ var Rect = React.createClass({
 		if (ctx == null)
 			return false;
 
-		ctx.fillStyle = this.state.rect.bg;
+		ctx.fillStyle = (this.state.rect.hover) ? "#D7D7D7" : this.state.rect.bg;
+		ctx.fillStyle = (this.state.rect.select) ? "#D3F5E3" : ctx.fillStyle;
 		ctx.fillRect(
 			this.state.rect.posX, 
 			this.state.rect.posY, 
 			this.state.rect.width, 
 			this.state.rect.height);
+
 
 		if (this.state.rect.day) {
 			ctx.font = "bold 18px Calibri";

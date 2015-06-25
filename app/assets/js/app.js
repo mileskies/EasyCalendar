@@ -20441,35 +20441,23 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	/** @jsx React.DOM */var React = __webpack_require__(2);
-	var Reflux = __webpack_require__(159);
-	var Action = __webpack_require__(181);
-	var Rect = __webpack_require__(182);
+	var Reflux = __webpack_require__(160);
+	var CalStore = __webpack_require__(182);
+	var Action = __webpack_require__(159);
+	var Nav = __webpack_require__(183);
+	var Rect = __webpack_require__(184);
 
 	var YiZCal = React.createClass({displayName: "YiZCal",
-		getInitialState: function() {
-			var width = document.getElementById('YiZCal').offsetWidth;
-			var height = document.getElementById('YiZCal').offsetHeight;
-			var thH = (height - 14) / 9;
-			var avgW = (width - 16) / 7;
-			var	avgH = (height - thH - 14) / 5;
-			var date = new Date();
-			return {
-				width: width,
-				height: height,
-				avgW: avgW,
-				avgH: avgH,
-				thH: thH,
-				date: date
-			}
-		},
+		mixins: [Reflux.connect(CalStore)],
+
 		calInit: function() {		
 			var rects = [];
 			var color = "#A6A9AE";
 			var type = "head";
 			var width = this.state.avgW;
 			var height = this.state.avgH;
-			var x = 2, y = 2;
-			for (var i = 1; i <= 42; i++) {
+			var x = 2, y = 0;
+			for (var i = 1; i <= 49; i++) {
 				height = (i > 7) ? this.state.avgH : this.state.thH;
 				type = (i > 7) ? "content" : type;
 				color = (i > 7) ? "#ECF1F4" : color;
@@ -20509,12 +20497,19 @@
 	      		var y = e.clientY - rect.top;
 	      		Action.rectMouseMove(x, y, _this.state.thH + 3, _this.state.avgH + 2, _this.state.avgW + 2);
 			});
+
+			cal.addEventListener('click', function(e) {
+				var rect = cal.getBoundingClientRect();
+				var x = e.clientX - rect.left;
+	      		var y = e.clientY - rect.top;
+	      		Action.rectMouseClick(x, y, _this.state.thH + 3, _this.state.avgH + 2, _this.state.avgW + 2);
+			});
 		},
 		render: function() {		
 			return (
 				React.createElement("div", null, 
 					React.createElement("div", null, 
-						this.state.date.getFullYear() + "年" + (this.state.date.getMonth()+1) + "月" + this.state.date.getDate() + "日"
+						React.createElement(Nav, {date: this.state.date})					
 					), 
 					React.createElement("canvas", {id: "easyCal", ref: "canvas", width: this.state.width, height: this.state.height}, 
 						this.calInit()
@@ -20531,37 +20526,57 @@
 /* 159 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/** @jsx React.DOM */module.exports = __webpack_require__(160);
+	/** @jsx React.DOM */var Reflux = __webpack_require__(160);
 
+	var Actions = Reflux.createActions([
+		/** cal store **/
+		'changeMonth',
+
+		/** rect store **/
+		'initRect',
+		'setRectInfo',
+		'rectMouseMove',
+		'rectMouseClick',
+		'rectUpdateMonth',
+	]);
+
+	module.exports = Actions;
 
 /***/ },
 /* 160 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/** @jsx React.DOM */exports.ActionMethods = __webpack_require__(162);
-
-	exports.ListenerMethods = __webpack_require__(163);
-
-	exports.PublisherMethods = __webpack_require__(174);
-
-	exports.StoreMethods = __webpack_require__(175);
-
-	exports.createAction = __webpack_require__(176);
-
-	exports.createStore = __webpack_require__(170);
-
-	exports.connect = __webpack_require__(177);
-
-	exports.connectFilter = __webpack_require__(178);
-
-	exports.ListenerMixin = __webpack_require__(179);
-
-	exports.listenTo = __webpack_require__(161);
-
-	exports.listenToMany = __webpack_require__(180);
+	/** @jsx React.DOM */module.exports = __webpack_require__(161);
 
 
-	var maker = __webpack_require__(169).staticJoinCreator;
+/***/ },
+/* 161 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/** @jsx React.DOM */exports.ActionMethods = __webpack_require__(163);
+
+	exports.ListenerMethods = __webpack_require__(164);
+
+	exports.PublisherMethods = __webpack_require__(175);
+
+	exports.StoreMethods = __webpack_require__(176);
+
+	exports.createAction = __webpack_require__(177);
+
+	exports.createStore = __webpack_require__(171);
+
+	exports.connect = __webpack_require__(178);
+
+	exports.connectFilter = __webpack_require__(179);
+
+	exports.ListenerMixin = __webpack_require__(180);
+
+	exports.listenTo = __webpack_require__(162);
+
+	exports.listenToMany = __webpack_require__(181);
+
+
+	var maker = __webpack_require__(170).staticJoinCreator;
 
 	exports.joinTrailing = exports.all = maker("last"); // Reflux.all alias for backward compatibility
 
@@ -20571,7 +20586,7 @@
 
 	exports.joinConcat = maker("all");
 
-	var _ = __webpack_require__(164);
+	var _ = __webpack_require__(165);
 
 	exports.EventEmitter = _.EventEmitter;
 
@@ -20600,7 +20615,7 @@
 	 * Sets the eventmitter that Reflux uses
 	 */
 	exports.setEventEmitter = function(ctx) {
-	    var _ = __webpack_require__(164);
+	    var _ = __webpack_require__(165);
 	    exports.EventEmitter = _.EventEmitter = ctx;
 	};
 
@@ -20609,7 +20624,7 @@
 	 * Sets the Promise library that Reflux uses
 	 */
 	exports.setPromise = function(ctx) {
-	    var _ = __webpack_require__(164);
+	    var _ = __webpack_require__(165);
 	    exports.Promise = _.Promise = ctx;
 	};
 
@@ -20619,7 +20634,7 @@
 	 * @param {Function} factory has the signature `function(resolver) { return [new Promise]; }`
 	 */
 	exports.setPromiseFactory = function(factory) {
-	    var _ = __webpack_require__(164);
+	    var _ = __webpack_require__(165);
 	    _.createPromise = factory;
 	};
 
@@ -20628,14 +20643,14 @@
 	 * Sets the method used for deferring actions and stores
 	 */
 	exports.nextTick = function(nextTick) {
-	    var _ = __webpack_require__(164);
+	    var _ = __webpack_require__(165);
 	    _.nextTick = nextTick;
 	};
 
 	/**
 	 * Provides the set of created actions and stores for introspection
 	 */
-	exports.__keep = __webpack_require__(171);
+	exports.__keep = __webpack_require__(172);
 
 	/**
 	 * Warn if Function.prototype.bind not available
@@ -20650,10 +20665,10 @@
 
 
 /***/ },
-/* 161 */
+/* 162 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/** @jsx React.DOM */var Reflux = __webpack_require__(160);
+	/** @jsx React.DOM */var Reflux = __webpack_require__(161);
 
 
 	/**
@@ -20692,7 +20707,7 @@
 
 
 /***/ },
-/* 162 */
+/* 163 */
 /***/ function(module, exports) {
 
 	/** @jsx React.DOM *//**
@@ -20704,11 +20719,11 @@
 
 
 /***/ },
-/* 163 */
+/* 164 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/** @jsx React.DOM */var _ = __webpack_require__(164),
-	    maker = __webpack_require__(169).instanceJoinCreator;
+	/** @jsx React.DOM */var _ = __webpack_require__(165),
+	    maker = __webpack_require__(170).instanceJoinCreator;
 
 	/**
 	 * Extract child listenables from a parent from their
@@ -20930,7 +20945,7 @@
 
 
 /***/ },
-/* 164 */
+/* 165 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/** @jsx React.DOM *//*
@@ -20965,7 +20980,7 @@
 	    return typeof value === 'function';
 	};
 
-	exports.EventEmitter = __webpack_require__(165);
+	exports.EventEmitter = __webpack_require__(166);
 
 	exports.nextTick = function(callback) {
 	    setTimeout(callback, 0);
@@ -20987,7 +21002,7 @@
 	    return o;
 	};
 
-	exports.Promise = __webpack_require__(166);
+	exports.Promise = __webpack_require__(167);
 
 	exports.createPromise = function(resolver) {
 	    return new exports.Promise(resolver);
@@ -21005,7 +21020,7 @@
 
 
 /***/ },
-/* 165 */
+/* 166 */
 /***/ function(module, exports) {
 
 	/** @jsx React.DOM */'use strict';
@@ -21240,19 +21255,19 @@
 
 
 /***/ },
-/* 166 */
+/* 167 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(global, setImmediate) {/** @jsx React.DOM *//*! Native Promise Only
 	    v0.7.8-a (c) Kyle Simpson
 	    MIT License: http://getify.mit-license.org
 	*/
-	!function(t,n,e){n[t]=n[t]||e(),"undefined"!=typeof module&&module.exports?module.exports=n[t]:"function"=="function"&&__webpack_require__(168)&&!(__WEBPACK_AMD_DEFINE_RESULT__ = function(){return n[t]}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__))}("Promise","undefined"!=typeof global?global:this,function(){"use strict";function t(t,n){l.add(t,n),h||(h=y(l.drain))}function n(t){var n,e=typeof t;return null==t||"object"!=e&&"function"!=e||(n=t.then),"function"==typeof n?n:!1}function e(){for(var t=0;t<this.chain.length;t++)o(this,1===this.state?this.chain[t].success:this.chain[t].failure,this.chain[t]);this.chain.length=0}function o(t,e,o){var r,i;try{e===!1?o.reject(t.msg):(r=e===!0?t.msg:e.call(void 0,t.msg),r===o.promise?o.reject(TypeError("Promise-chain cycle")):(i=n(r))?i.call(r,o.resolve,o.reject):o.resolve(r))}catch(c){o.reject(c)}}function r(o){var c,u,a=this;if(!a.triggered){a.triggered=!0,a.def&&(a=a.def);try{(c=n(o))?(u=new f(a),c.call(o,function(){r.apply(u,arguments)},function(){i.apply(u,arguments)})):(a.msg=o,a.state=1,a.chain.length>0&&t(e,a))}catch(s){i.call(u||new f(a),s)}}}function i(n){var o=this;o.triggered||(o.triggered=!0,o.def&&(o=o.def),o.msg=n,o.state=2,o.chain.length>0&&t(e,o))}function c(t,n,e,o){for(var r=0;r<n.length;r++)!function(r){t.resolve(n[r]).then(function(t){e(r,t)},o)}(r)}function f(t){this.def=t,this.triggered=!1}function u(t){this.promise=t,this.state=0,this.triggered=!1,this.chain=[],this.msg=void 0}function a(n){if("function"!=typeof n)throw TypeError("Not a function");if(0!==this.__NPO__)throw TypeError("Not a promise");this.__NPO__=1;var o=new u(this);this.then=function(n,r){var i={success:"function"==typeof n?n:!0,failure:"function"==typeof r?r:!1};return i.promise=new this.constructor(function(t,n){if("function"!=typeof t||"function"!=typeof n)throw TypeError("Not a function");i.resolve=t,i.reject=n}),o.chain.push(i),0!==o.state&&t(e,o),i.promise},this["catch"]=function(t){return this.then(void 0,t)};try{n.call(void 0,function(t){r.call(o,t)},function(t){i.call(o,t)})}catch(c){i.call(o,c)}}var s,h,l,p=Object.prototype.toString,y="undefined"!=typeof setImmediate?function(t){return setImmediate(t)}:setTimeout;try{Object.defineProperty({},"x",{}),s=function(t,n,e,o){return Object.defineProperty(t,n,{value:e,writable:!0,configurable:o!==!1})}}catch(d){s=function(t,n,e){return t[n]=e,t}}l=function(){function t(t,n){this.fn=t,this.self=n,this.next=void 0}var n,e,o;return{add:function(r,i){o=new t(r,i),e?e.next=o:n=o,e=o,o=void 0},drain:function(){var t=n;for(n=e=h=void 0;t;)t.fn.call(t.self),t=t.next}}}();var g=s({},"constructor",a,!1);return a.prototype=g,s(g,"__NPO__",0,!1),s(a,"resolve",function(t){var n=this;return t&&"object"==typeof t&&1===t.__NPO__?t:new n(function(n,e){if("function"!=typeof n||"function"!=typeof e)throw TypeError("Not a function");n(t)})}),s(a,"reject",function(t){return new this(function(n,e){if("function"!=typeof n||"function"!=typeof e)throw TypeError("Not a function");e(t)})}),s(a,"all",function(t){var n=this;return"[object Array]"!=p.call(t)?n.reject(TypeError("Not an array")):0===t.length?n.resolve([]):new n(function(e,o){if("function"!=typeof e||"function"!=typeof o)throw TypeError("Not a function");var r=t.length,i=Array(r),f=0;c(n,t,function(t,n){i[t]=n,++f===r&&e(i)},o)})}),s(a,"race",function(t){var n=this;return"[object Array]"!=p.call(t)?n.reject(TypeError("Not an array")):new n(function(e,o){if("function"!=typeof e||"function"!=typeof o)throw TypeError("Not a function");c(n,t,function(t,n){e(n)},o)})}),a});
+	!function(t,n,e){n[t]=n[t]||e(),"undefined"!=typeof module&&module.exports?module.exports=n[t]:"function"=="function"&&__webpack_require__(169)&&!(__WEBPACK_AMD_DEFINE_RESULT__ = function(){return n[t]}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__))}("Promise","undefined"!=typeof global?global:this,function(){"use strict";function t(t,n){l.add(t,n),h||(h=y(l.drain))}function n(t){var n,e=typeof t;return null==t||"object"!=e&&"function"!=e||(n=t.then),"function"==typeof n?n:!1}function e(){for(var t=0;t<this.chain.length;t++)o(this,1===this.state?this.chain[t].success:this.chain[t].failure,this.chain[t]);this.chain.length=0}function o(t,e,o){var r,i;try{e===!1?o.reject(t.msg):(r=e===!0?t.msg:e.call(void 0,t.msg),r===o.promise?o.reject(TypeError("Promise-chain cycle")):(i=n(r))?i.call(r,o.resolve,o.reject):o.resolve(r))}catch(c){o.reject(c)}}function r(o){var c,u,a=this;if(!a.triggered){a.triggered=!0,a.def&&(a=a.def);try{(c=n(o))?(u=new f(a),c.call(o,function(){r.apply(u,arguments)},function(){i.apply(u,arguments)})):(a.msg=o,a.state=1,a.chain.length>0&&t(e,a))}catch(s){i.call(u||new f(a),s)}}}function i(n){var o=this;o.triggered||(o.triggered=!0,o.def&&(o=o.def),o.msg=n,o.state=2,o.chain.length>0&&t(e,o))}function c(t,n,e,o){for(var r=0;r<n.length;r++)!function(r){t.resolve(n[r]).then(function(t){e(r,t)},o)}(r)}function f(t){this.def=t,this.triggered=!1}function u(t){this.promise=t,this.state=0,this.triggered=!1,this.chain=[],this.msg=void 0}function a(n){if("function"!=typeof n)throw TypeError("Not a function");if(0!==this.__NPO__)throw TypeError("Not a promise");this.__NPO__=1;var o=new u(this);this.then=function(n,r){var i={success:"function"==typeof n?n:!0,failure:"function"==typeof r?r:!1};return i.promise=new this.constructor(function(t,n){if("function"!=typeof t||"function"!=typeof n)throw TypeError("Not a function");i.resolve=t,i.reject=n}),o.chain.push(i),0!==o.state&&t(e,o),i.promise},this["catch"]=function(t){return this.then(void 0,t)};try{n.call(void 0,function(t){r.call(o,t)},function(t){i.call(o,t)})}catch(c){i.call(o,c)}}var s,h,l,p=Object.prototype.toString,y="undefined"!=typeof setImmediate?function(t){return setImmediate(t)}:setTimeout;try{Object.defineProperty({},"x",{}),s=function(t,n,e,o){return Object.defineProperty(t,n,{value:e,writable:!0,configurable:o!==!1})}}catch(d){s=function(t,n,e){return t[n]=e,t}}l=function(){function t(t,n){this.fn=t,this.self=n,this.next=void 0}var n,e,o;return{add:function(r,i){o=new t(r,i),e?e.next=o:n=o,e=o,o=void 0},drain:function(){var t=n;for(n=e=h=void 0;t;)t.fn.call(t.self),t=t.next}}}();var g=s({},"constructor",a,!1);return a.prototype=g,s(g,"__NPO__",0,!1),s(a,"resolve",function(t){var n=this;return t&&"object"==typeof t&&1===t.__NPO__?t:new n(function(n,e){if("function"!=typeof n||"function"!=typeof e)throw TypeError("Not a function");n(t)})}),s(a,"reject",function(t){return new this(function(n,e){if("function"!=typeof n||"function"!=typeof e)throw TypeError("Not a function");e(t)})}),s(a,"all",function(t){var n=this;return"[object Array]"!=p.call(t)?n.reject(TypeError("Not an array")):0===t.length?n.resolve([]):new n(function(e,o){if("function"!=typeof e||"function"!=typeof o)throw TypeError("Not a function");var r=t.length,i=Array(r),f=0;c(n,t,function(t,n){i[t]=n,++f===r&&e(i)},o)})}),s(a,"race",function(t){var n=this;return"[object Array]"!=p.call(t)?n.reject(TypeError("Not an array")):new n(function(e,o){if("function"!=typeof e||"function"!=typeof o)throw TypeError("Not a function");c(n,t,function(t,n){e(n)},o)})}),a});
 
-	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(167).setImmediate))
+	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(168).setImmediate))
 
 /***/ },
-/* 167 */
+/* 168 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(setImmediate, clearImmediate) {/** @jsx React.DOM */var nextTick = __webpack_require__(4).nextTick;
@@ -21331,10 +21346,10 @@
 	exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate : function(id) {
 	  delete immediateIds[id];
 	};
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(167).setImmediate, __webpack_require__(167).clearImmediate))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(168).setImmediate, __webpack_require__(168).clearImmediate))
 
 /***/ },
-/* 168 */
+/* 169 */
 /***/ function(module, exports) {
 
 	/* WEBPACK VAR INJECTION */(function(__webpack_amd_options__) {module.exports = __webpack_amd_options__;
@@ -21342,7 +21357,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, {}))
 
 /***/ },
-/* 169 */
+/* 170 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/** @jsx React.DOM *//**
@@ -21350,8 +21365,8 @@
 	 */
 
 	var slice = Array.prototype.slice,
-	    _ = __webpack_require__(164),
-	    createStore = __webpack_require__(170),
+	    _ = __webpack_require__(165),
+	    createStore = __webpack_require__(171),
 	    strategyMethodNames = {
 	        strict: "joinStrict",
 	        first: "joinLeading",
@@ -21454,15 +21469,15 @@
 
 
 /***/ },
-/* 170 */
+/* 171 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/** @jsx React.DOM */var _ = __webpack_require__(164),
-	    Reflux = __webpack_require__(160),
-	    Keep = __webpack_require__(171),
-	    mixer = __webpack_require__(172),
+	/** @jsx React.DOM */var _ = __webpack_require__(165),
+	    Reflux = __webpack_require__(161),
+	    Keep = __webpack_require__(172),
+	    mixer = __webpack_require__(173),
 	    allowed = {preEmit:1,shouldEmit:1},
-	    bindMethods = __webpack_require__(173);
+	    bindMethods = __webpack_require__(174);
 
 	/**
 	 * Creates an event emitting Data Store. It is mixed in with functions
@@ -21521,7 +21536,7 @@
 
 
 /***/ },
-/* 171 */
+/* 172 */
 /***/ function(module, exports) {
 
 	/** @jsx React.DOM */exports.createdStores = [];
@@ -21539,10 +21554,10 @@
 
 
 /***/ },
-/* 172 */
+/* 173 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/** @jsx React.DOM */var _ = __webpack_require__(164);
+	/** @jsx React.DOM */var _ = __webpack_require__(165);
 
 	module.exports = function mix(def) {
 	    var composed = {
@@ -21602,7 +21617,7 @@
 
 
 /***/ },
-/* 173 */
+/* 174 */
 /***/ function(module, exports) {
 
 	/** @jsx React.DOM */module.exports = function(store, definition) {
@@ -21631,10 +21646,10 @@
 
 
 /***/ },
-/* 174 */
+/* 175 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/** @jsx React.DOM */var _ = __webpack_require__(164);
+	/** @jsx React.DOM */var _ = __webpack_require__(165);
 
 	/**
 	 * A module of methods for object that you want to be able to listen to.
@@ -21818,7 +21833,7 @@
 
 
 /***/ },
-/* 175 */
+/* 176 */
 /***/ function(module, exports) {
 
 	/** @jsx React.DOM *//**
@@ -21830,12 +21845,12 @@
 
 
 /***/ },
-/* 176 */
+/* 177 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/** @jsx React.DOM */var _ = __webpack_require__(164),
-	    Reflux = __webpack_require__(160),
-	    Keep = __webpack_require__(171),
+	/** @jsx React.DOM */var _ = __webpack_require__(165),
+	    Reflux = __webpack_require__(161),
+	    Keep = __webpack_require__(172),
 	    allowed = {preEmit:1,shouldEmit:1};
 
 	/**
@@ -21901,11 +21916,11 @@
 
 
 /***/ },
-/* 177 */
+/* 178 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/** @jsx React.DOM */var Reflux = __webpack_require__(160),
-	    _ = __webpack_require__(164);
+	/** @jsx React.DOM */var Reflux = __webpack_require__(161),
+	    _ = __webpack_require__(165);
 
 	module.exports = function(listenable,key){
 	    return {
@@ -21933,11 +21948,11 @@
 
 
 /***/ },
-/* 178 */
+/* 179 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/** @jsx React.DOM */var Reflux = __webpack_require__(160),
-	  _ = __webpack_require__(164);
+	/** @jsx React.DOM */var Reflux = __webpack_require__(161),
+	  _ = __webpack_require__(165);
 
 	module.exports = function(listenable, key, filterFunc) {
 	    filterFunc = _.isFunction(key) ? key : filterFunc;
@@ -21978,11 +21993,11 @@
 
 
 /***/ },
-/* 179 */
+/* 180 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/** @jsx React.DOM */var _ = __webpack_require__(164),
-	    ListenerMethods = __webpack_require__(163);
+	/** @jsx React.DOM */var _ = __webpack_require__(165),
+	    ListenerMethods = __webpack_require__(164);
 
 	/**
 	 * A module meant to be consumed as a mixin by a React component. Supplies the methods from
@@ -22001,10 +22016,10 @@
 
 
 /***/ },
-/* 180 */
+/* 181 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/** @jsx React.DOM */var Reflux = __webpack_require__(160);
+	/** @jsx React.DOM */var Reflux = __webpack_require__(161);
 
 	/**
 	 * A mixin factory for a React component. Meant as a more convenient way of using the `listenerMixin`,
@@ -22040,26 +22055,169 @@
 
 
 /***/ },
-/* 181 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/** @jsx React.DOM */var Reflux = __webpack_require__(159);
-
-	var Actions = Reflux.createActions([
-		'initRect',
-		'setRectInfo',
-		'rectMouseMove'
-	]);
-
-	module.exports = Actions;
-
-/***/ },
 /* 182 */
 /***/ function(module, exports, __webpack_require__) {
 
+	/** @jsx React.DOM */var Reflux = __webpack_require__(160);
+	var Actions = __webpack_require__(159);
+
+	var CalStore = Reflux.createStore({
+		listenables: Actions,
+		init: function() {		
+			this.width = document.getElementById('YiZCal').offsetWidth;
+			this.height = document.getElementById('YiZCal').offsetHeight;
+			this.thH = (this.height - 14) / 21 * 2;
+			this.avgW = (this.width - 16) / 7;
+			this.avgH = (this.height - this.thH - 14) / 6;
+			this.date = new Date();
+			this.date = {
+				year: this.date.getFullYear(),
+				month: this.date.getMonth() + 1,
+				date: this.date.getDate()
+			}
+		},
+		getInitialState: function() {
+			return {
+				width: this.width,
+				height: this.height,
+				avgW: this.avgW,
+				avgH: this.avgH,
+				thH: this.thH,
+				date: this.date
+			}
+		},
+		onChangeMonth: function(num) {
+			var month = this.date.month + num;
+			if (month < 1) {
+				this.date.month = 12;
+				this.date.year--;
+			} else if (month > 12) {
+				this.date.month = 1;
+				this.date.year++;
+			} else {
+				this.date.month = month;
+			}
+
+			if (num === 0) {
+				this.date = new Date();
+				this.date = {
+					year: this.date.getFullYear(),
+					month: this.date.getMonth() + 1,
+					date: this.date.getDate()
+				}
+			}
+
+			this.trigger({
+				width: this.width,
+				height: this.height,
+				avgW: this.avgW,
+				avgH: this.avgH,
+				thH: this.thH,
+				date: this.date	
+			});
+		}
+	});
+
+	module.exports = CalStore;
+
+/***/ },
+/* 183 */
+/***/ function(module, exports, __webpack_require__) {
+
 	/** @jsx React.DOM */var React = __webpack_require__(2);
-	var Reflux = __webpack_require__(159);
-	var RectStore = __webpack_require__(183);
+	var Reflux = __webpack_require__(160);
+	var Action = __webpack_require__(159);
+
+	var styles = {
+		nav: {
+			background: "#292929",
+			color: "#FFF",
+			height: "50px",
+			margin: "0 2px 0 2px",
+			fontSize: "2em",
+			fontWeight: "bold",
+			position: "relative",
+
+			display: "-webkit-box",
+		    display: "-moz-box",
+		    display: "-ms-flexbox",
+		    display: "-webkit-flex",
+		    display: "flex",
+		    WebkitBoxPack: "center",
+		    MozBoxPack: "center",
+		    msFlexPack: "center",
+		    WebkitJustifyContent: "center",
+		    justifyContent: "center",
+		    WebkitAlignItems: "center",
+		    alignItems: "center"
+		},
+		date: {
+			display: "-webkit-box",
+		    display: "-moz-box",
+		    display: "-ms-flexbox",
+		    display: "-webkit-flex",
+		    display: "flex",
+		    WebkitBoxPack: "center",
+		    MozBoxPack: "center",
+		    msFlexPack: "center",
+		    WebkitJustifyContent: "center",
+		    justifyContent: "center",
+		    WebkitAlignItems: "center",
+		    alignItems: "center"
+		},
+		select: {
+			padding: "0 20px 0 20px",
+			cursor: "pointer"
+		},
+		today: {
+			height: "100%",
+			position: "absolute",
+			right: "10px",
+			display: "-webkit-box",
+		    display: "-moz-box",
+		    display: "-ms-flexbox",
+		    display: "-webkit-flex",
+		    display: "flex",
+		    WebkitBoxPack: "center",
+		    MozBoxPack: "center",
+		    msFlexPack: "center",
+		    WebkitJustifyContent: "center",
+		    justifyContent: "center",
+		    WebkitAlignItems: "center",
+		    alignItems: "center",
+		    cursor: "pointer"
+		}
+	}
+
+	var CalNavBar = React.createClass({displayName: "CalNavBar",
+		changeMonth: function(num) {
+			Action.changeMonth(num);
+			Action.rectUpdateMonth(this.props.date, num);
+		},
+		render: function() {
+			return (
+				React.createElement("div", {style: styles.nav}, 
+					React.createElement("div", {style: styles.date}, 
+						React.createElement("div", {style: styles.select, onClick: this.changeMonth.bind(this, -1)}, "<"), 
+						React.createElement("div", null, this.props.date.year + " / " + (this.props.date.month)), 
+						React.createElement("div", {style: styles.select, onClick: this.changeMonth.bind(this, 1)}, ">")
+					), 
+					React.createElement("div", {style: styles.today, onClick: this.changeMonth.bind(this, 0)}, "today")
+				)
+			);
+		}
+
+	});
+
+	module.exports = CalNavBar;
+
+/***/ },
+/* 184 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/** @jsx React.DOM */var React = __webpack_require__(2);
+	var Reflux = __webpack_require__(160);
+	var RectStore = __webpack_require__(185);
 
 	var Rect = React.createClass({displayName: "Rect",
 		mixins: [Reflux.listenTo(RectStore, "reDraw")],
@@ -22077,12 +22235,14 @@
 			if (ctx == null)
 				return false;
 
-			ctx.fillStyle = this.state.rect.bg;
+			ctx.fillStyle = (this.state.rect.hover) ? "#D7D7D7" : this.state.rect.bg;
+			ctx.fillStyle = (this.state.rect.select) ? "#D3F5E3" : ctx.fillStyle;
 			ctx.fillRect(
 				this.state.rect.posX, 
 				this.state.rect.posY, 
 				this.state.rect.width, 
 				this.state.rect.height);
+
 
 			if (this.state.rect.day) {
 				ctx.font = "bold 18px Calibri";
@@ -22098,15 +22258,20 @@
 	module.exports = Rect;
 
 /***/ },
-/* 183 */
+/* 185 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/** @jsx React.DOM */var Reflux = __webpack_require__(159);
-	var Actions = __webpack_require__(181);
+	/** @jsx React.DOM */var Reflux = __webpack_require__(160);
+	var Actions = __webpack_require__(159);
 
 	var RectStore = Reflux.createStore({
 		listenables: Actions,
-		init: function() {		
+		init: function() {
+			this.months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+			this.weeks = ['Sun.','Mon.','Tue.','Wed.','Thu.','Fri.','Sat.'];
+			this.select_id = null;
+			this.select_day = null;
+
 			this.data = {
 				ctx: null,
 				rect: []			
@@ -22121,42 +22286,90 @@
 			cols = cols > 7 ? 7 : cols;
 			return Math.ceil((y - thH) / h) * 7 + cols - 1;
 		},
-		onInitRect: function(ctx, date) {
-			var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-			var weeks = ['Sun.','Mon.','Tue.','Wed.','Thu.','Fri.','Sat.'];
-			var month = date.getMonth();
-			var day = date.getDate();
-			var year = date.getFullYear();
+		updateRect: function(date) {
+			var month = date.month;
+			var day = date.date;
+			var year = date.year;
 
-			days = this.daysInMonth(year, month + 1);		
-			var oneOfMonth = new Date(months[month]+' 1, '+year);
-			var firstDay = oneOfMonth.getDay();		
+			days = this.daysInMonth(year, month);		
+			var oneOfMonth = new Date(this.months[month - 1]+' 1, '+year);
+			var firstDay = oneOfMonth.getDay() + 7;
 			
-			var ind = 1;
-			for (var i = firstDay + 7; i < 42; i++) {
-				this.data.rect[i].day = ind;
-				ind++;
-				if (ind > days)	break;
+			var ind = 1;		
+			for (var i = 0; i < 49; i++) {
+				this.data.rect[i].year = year;
+				this.data.rect[i].month = month;
+				this.data.rect[i].day = false;
+				this.data.rect[i].select = false;
+				if ((!this.select_day && ind == day) || (year+"/"+month+"/"+ind) == this.select_day) {
+					this.select_day = year+"/"+month+"/"+ind;
+					this.select_id = i;
+					this.data.rect[i].select = true;
+				}
+				this.data.rect[i].hover = false;
+				if (i >= firstDay && ind <= days) {
+					this.data.rect[i].day = ind;
+					ind++;
+				}			
 			}
 			for (var i = 0; i < 7; i++) {
-				this.data.rect[i].day = weeks[i];
+				this.data.rect[i].day = this.weeks[i];
 			}
-
-
-			this.data.ctx = ctx;
-			this.trigger(this.data);
 		},
 	    onSetRectInfo: function(data) {
 	    	this.data.rect.push(data);
 	    },
+		onInitRect: function(ctx, date) {		
+			this.updateRect(date);
+
+			this.data.ctx = ctx;
+			this.trigger(this.data);
+		},
 	    onRectMouseMove: function(x, y, thH, h, w) {
 	    	var id = this.isMouseOn(x, y, thH, h, w);
 	    	if (!id) return;
-	    	var _color = this.data.rect[id].bg;
-	    	this.data.rect[id].bg = '#D7D7D7';
+	    	this.data.rect[id].hover = true;
 	    	this.trigger(this.data);
-	    	this.data.rect[id].bg = _color;
+	    	this.data.rect[id].hover = false;
 	    },
+	    onRectMouseClick: function(x, y, thH, h, w) {
+	    	var id = this.isMouseOn(x, y, thH, h, w);
+	    	if (!id) return;    
+	    	if (this.select_id) this.data.rect[this.select_id].select = false;
+	    	this.select_id = id;
+	    	this.data.rect[id].select = true;
+	    	this.select_day = this.data.rect[id].year + "/" + this.data.rect[id].month + "/" + this.data.rect[id].day;
+
+	    	this.trigger(this.data);
+	    },
+	    onRectUpdateMonth: function(date, num) {
+	    	var _date = {
+	    		year: date.year,
+	    		month: date.month,
+	    		date: date.date
+	    	}    	
+
+			if (_date.month < 1) {
+				_date.month = 12;
+				_date.year--;
+			} else if (_date.month > 12) {
+				_date.month = 1;
+				_date.year++;
+			}
+
+			if (num === 0) {
+				_date = new Date();
+				_date = {
+					year: _date.getFullYear(),
+					month: _date.getMonth() + 1,
+					date: _date.getDate()
+				}
+				this.select_day = _date.year+"/"+_date.month+"/"+_date.date;
+			}
+
+			this.updateRect(_date);		
+	    	this.trigger(this.data);
+	    }
 	});
 
 	module.exports = RectStore;
