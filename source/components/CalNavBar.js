@@ -1,5 +1,6 @@
 var React = require('react');
 var Reflux = require('reflux');
+var CalNavStore = require('../stores/CalNavStore');
 var Action = require('../actions/Actions');
 
 var styles = {
@@ -64,16 +65,21 @@ var styles = {
 }
 
 var CalNavBar = React.createClass({
+	mixins: [Reflux.connect(CalNavStore)],
+
 	changeMonth: function(num) {
 		Action.changeMonth(num);
-		Action.rectUpdateMonth(this.props.date, num);
+		Action.rectUpdateMonth(this.state.date, num);
+	},
+	componentDidMount: function() {
+		Action.rectUpdateMonth(this.state.date, 0);	
 	},
 	render: function() {
 		return (
 			<div style={styles.nav}>
 				<div style={styles.date}>
 					<div style={styles.select} onClick={this.changeMonth.bind(this, -1)} >{"<"}</div>
-					<div>{this.props.date.year + " / " + (this.props.date.month)}</div>
+					<div>{this.state.date.year + " / " + (this.state.date.month)}</div>
 					<div style={styles.select} onClick={this.changeMonth.bind(this, 1)} >{">"}</div>
 				</div>
 				<div style={styles.today} onClick={this.changeMonth.bind(this, 0)} >today</div>

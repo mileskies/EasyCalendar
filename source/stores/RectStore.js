@@ -1,3 +1,4 @@
+var React = require('react/addons');
 var Reflux = require('reflux');
 var Actions = require('../actions/Actions');
 
@@ -7,7 +8,9 @@ var RectStore = Reflux.createStore({
 		this.months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 		this.weeks = ['Sun.','Mon.','Tue.','Wed.','Thu.','Fri.','Sat.'];
 		this.select_id = null;
+		this.hover_id = null;
 		this.select_day = null;
+		this.date = null;
 
 		this.data = {
 			ctx: null,
@@ -23,61 +26,111 @@ var RectStore = Reflux.createStore({
 		cols = cols > 7 ? 7 : cols;
 		return Math.ceil((y - thH) / h) * 7 + cols - 1;
 	},
-	updateRect: function(date) {
-		var month = date.month;
-		var day = date.date;
-		var year = date.year;
+	updateRect: function() {
+		var month = this.date.month;
+		var day = this.date.date;
+		var year = this.date.year;
 
-		days = this.daysInMonth(year, month);		
+		var days = this.daysInMonth(year, month);		
 		var oneOfMonth = new Date(this.months[month - 1]+' 1, '+year);
 		var firstDay = oneOfMonth.getDay() + 7;
 		
+		var newData = {
+			ctx: this.data.ctx,
+			rect: []
+		};
+
 		var ind = 1;		
 		for (var i = 0; i < 49; i++) {
+			var temp = {};
 			this.data.rect[i].year = year;
 			this.data.rect[i].month = month;
 			this.data.rect[i].day = false;
 			this.data.rect[i].select = false;
+			this.data.rect[i].hover = false;
 			if ((!this.select_day && ind == day) || (year+"/"+month+"/"+ind) == this.select_day) {
 				this.select_day = year+"/"+month+"/"+ind;
 				this.select_id = i;
 				this.data.rect[i].select = true;
 			}
-			this.data.rect[i].hover = false;
 			if (i >= firstDay && ind <= days) {
 				this.data.rect[i].day = ind;
 				ind++;
-			}			
+			}
+			if (i < 7) {
+				this.data.rect[i].day = this.weeks[i];
+			}
+
+			temp.year = this.data.rect[i].year;
+			temp.month = this.data.rect[i].month;
+			temp.day = this.data.rect[i].day;
+			temp.select = this.data.rect[i].select;
+			temp.hover = this.data.rect[i].hover;
+			temp.type = this.data.rect[i].type;
+			temp.bg = this.data.rect[i].bg;
+			temp.posX = this.data.rect[i].posX;
+		 	temp.posY = this.data.rect[i].posY;
+		 	temp.width = this.data.rect[i].width;
+		 	temp.height = this.data.rect[i].height;
+		 	temp.id = this.data.rect[i].id;
+			newData.rect.push(temp);
 		}
-		for (var i = 0; i < 7; i++) {
-			this.data.rect[i].day = this.weeks[i];
+		return newData;
+	},
+	cloneObj: function(data, id) {
+		if (id) {
+			data.rect[id] = React.addons.update(data.rect[id], {
+			      $merge: {}
+		    });
+		    return data;
 		}
+
+		var newData = React.addons.update(data, {
+		      $merge: {}
+	    });
+	    return newData;
 	},
     onSetRectInfo: function(data) {
-    	this.data.rect.push(data);
+    	this.data.rect = data;
     },
-	onInitRect: function(ctx, date) {		
-		this.updateRect(date);
-
+	onInitRect: function(ctx) {
 		this.data.ctx = ctx;
-		this.trigger(this.data);
+		var newData = this.updateRect();
+
+		this.trigger(newData);
 	},
     onRectMouseMove: function(x, y, thH, h, w) {
     	var id = this.isMouseOn(x, y, thH, h, w);
     	if (!id) return;
-    	this.data.rect[id].hover = true;
-    	this.trigger(this.data);
-    	this.data.rect[id].hover = false;
+
+    	var newData = this.cloneObj(this.data);
+	 	newData = this.cloneObj(newData, id);
+
+	 	if (this.hover_id) {
+		    newData = this.cloneObj(newData, this.hover_id);
+    		newData.rect[this.hover_id].hover = false;
+    	}
+    	this.hover_id = id;
+    	
+    	newData.rect[id].hover = true;
+    	this.trigger(newData);
     },
     onRectMouseClick: function(x, y, thH, h, w) {
     	var id = this.isMouseOn(x, y, thH, h, w);
-    	if (!id) return;    
-    	if (this.select_id) this.data.rect[this.select_id].select = false;
-    	this.select_id = id;
-    	this.data.rect[id].select = true;
-    	this.select_day = this.data.rect[id].year + "/" + this.data.rect[id].month + "/" + this.data.rect[id].day;
+    	if (!id) return;  
 
-    	this.trigger(this.data);
+    	var newData = this.cloneObj(this.data);
+	 	newData = this.cloneObj(newData, id);
+    	
+    	if (this.select_id) {
+    		newData = this.cloneObj(newData, this.select_id);
+    		newData.rect[this.select_id].select = false;
+    	}
+    	this.select_id = id;
+    	newData.rect[id].select = true;
+    	this.select_day = newData.rect[id].year + "/" + newData.rect[id].month + "/" + newData.rect[id].day;
+
+    	this.trigger(newData);
     },
     onRectUpdateMonth: function(date, num) {
     	var _date = {
@@ -104,8 +157,9 @@ var RectStore = Reflux.createStore({
 			this.select_day = _date.year+"/"+_date.month+"/"+_date.date;
 		}
 
-		this.updateRect(_date);		
-    	this.trigger(this.data);
+		this.date = _date;
+		var newData = this.updateRect();
+    	this.trigger(newData);
     }
 });
 

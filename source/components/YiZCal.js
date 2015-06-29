@@ -8,7 +8,8 @@ var Rect = require('./Rect');
 var YiZCal = React.createClass({
 	mixins: [Reflux.connect(CalStore)],
 
-	calInit: function() {		
+	calInit: function() {
+		var rectData = [];		
 		var rects = [];
 		var color = "#A6A9AE";
 		var type = "head";
@@ -30,7 +31,7 @@ var YiZCal = React.createClass({
 			 	height: height,
 			 	id: i
 			};
-			Action.setRectInfo(data);
+			rectData.push(data);
 			
 			if (i % 7 == 0) {
 				x = 2;
@@ -39,6 +40,7 @@ var YiZCal = React.createClass({
 				x += (width + 2);
 			}
 		}
+		Action.setRectInfo(rectData);
 		return rects;
 	},
 	componentWillMount: function() {
@@ -47,31 +49,36 @@ var YiZCal = React.createClass({
 		var _this = this;
 		var cal = React.findDOMNode(this.refs.canvas);
 		var ctx = cal.getContext('2d');
-		Action.initRect(ctx, this.state.date);
-
-		cal.addEventListener('mousemove', function(e) {
+		var mouseMoveHandle = function(e) {
 			var rect = cal.getBoundingClientRect();
 			var x = e.clientX - rect.left;
       		var y = e.clientY - rect.top;
       		Action.rectMouseMove(x, y, _this.state.thH + 3, _this.state.avgH + 2, _this.state.avgW + 2);
-		});
+		};
+		Action.initRect(ctx);
 
-		cal.addEventListener('click', function(e) {
+		cal.addEventListener('mousemove', mouseMoveHandle);
+
+		cal.addEventListener('mousedown', function(e) {
+			cal.removeEventListener('mousemove', mouseMoveHandle);
 			var rect = cal.getBoundingClientRect();
 			var x = e.clientX - rect.left;
       		var y = e.clientY - rect.top;
       		Action.rectMouseClick(x, y, _this.state.thH + 3, _this.state.avgH + 2, _this.state.avgW + 2);
+		});
+
+		cal.addEventListener('mouseup', function(e) {
+			cal.addEventListener('mousemove', mouseMoveHandle);
 		});
 	},
 	render: function() {		
 		return (
 			<div>
 				<div>
-					<Nav date={this.state.date} />					
+					<Nav />					
 				</div>
-				<canvas id="easyCal" ref="canvas" width={this.state.width} height={this.state.height} >
-					{this.calInit()}
-				</canvas>
+				<canvas id="easyCal" ref="canvas" width={this.state.width} height={this.state.height} />
+				{this.calInit()}
 			</div>
 		);
 	}

@@ -7,11 +7,23 @@ var Rect = React.createClass({
 
 	getInitialState: function() {
         return {
-        	ctx: null
+        	ctx: null,
+        	rect: {
+        		year: false,
+        		month: false,
+        		day: false,
+        		select: false,
+        		hover: false
+        	}
         };
     },
 	reDraw: function(data) {
-		this.setState({ctx: data.ctx, rect: data.rect[this.props.reactKey - 1]});
+		if (!this.state.ctx) {
+			this.setState({ctx: data.ctx, rect: data.rect[this.props.reactKey - 1]});
+		}
+		else if (JSON.stringify(this.state.rect) != JSON.stringify(data.rect[this.props.reactKey - 1])) {
+			this.setState({ctx: data.ctx, rect: data.rect[this.props.reactKey - 1]});
+		}
 	},
 	render: function() {
 		var ctx = this.state.ctx;
@@ -26,14 +38,12 @@ var Rect = React.createClass({
 			this.state.rect.width, 
 			this.state.rect.height);
 
-
 		if (this.state.rect.day) {
 			ctx.font = "bold 18px Calibri";
 			ctx.fillStyle = '#949494';
 			if (this.state.rect.type == 'head') ctx.fillStyle = '#FFF';
 			ctx.fillText(this.state.rect.day, this.state.rect.posX + 10, this.state.rect.posY + 20);
 		}
-
 		return null;
 	}
 });
