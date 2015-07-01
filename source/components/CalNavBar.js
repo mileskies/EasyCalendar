@@ -72,7 +72,6 @@ var CalNavBar = React.createClass({
 		Action.rectUpdateMonth(this.state.date, num);
 	},
 	componentDidMount: function() {
-		Action.rectUpdateMonth(this.state.date, 0);	
 	},
 	render: function() {
 		return (
