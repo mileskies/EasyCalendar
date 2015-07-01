@@ -10,7 +10,13 @@ var RectStore = Reflux.createStore({
 		this.select_id = null;
 		this.hover_id = null;
 		this.select_day = null;
-		this.date = null;
+
+		this.date = new Date();
+		this.date = {
+			year: this.date.getFullYear(),
+			month: this.date.getMonth() + 1,
+			date: this.date.getDate()
+		}
 
 		this.data = {
 			ctx: null,
@@ -48,7 +54,7 @@ var RectStore = Reflux.createStore({
 			this.data.rect[i].day = false;
 			this.data.rect[i].select = false;
 			this.data.rect[i].hover = false;
-			if ((!this.select_day && ind == day) || (year+"/"+month+"/"+ind) == this.select_day) {
+			if (i >= firstDay && ((!this.select_day && ind == day) || (year+"/"+month+"/"+ind) == this.select_day)) {
 				this.select_day = year+"/"+month+"/"+ind;
 				this.select_id = i;
 				this.data.rect[i].select = true;
